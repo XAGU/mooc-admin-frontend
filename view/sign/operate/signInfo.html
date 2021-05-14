@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <link href="../../../component/layui/css/layui.css" rel="stylesheet"/>
+    <link href="../../../admin/css/pearCommon.css" rel="stylesheet"/>
+</head>
+<body>
+<body class="pear-container">
+<!--表格展示-->
+<div class="layui-card">
+    <div class="layui-card-body">
+        <table id="signInfo-table" lay-filter="signInfo-table"></table>
+    </div>
+</div>
+</body>
+
+<script type="text/html" id="signInfo-createTime">
+    {{layui.util.toDateString(d.createTime, 'yyyy-MM-dd HH:mm:ss')}}
+</script>
+<script type="text/html" id="signInfo-overTime">
+    {{layui.util.toDateString(d.overTime, 'yyyy-MM-dd HH:mm:ss')}}
+</script>
+
+<script src="../../../component/layui/layui.js"></script>
+<script>
+    function child(source) {
+        console.log(source.courseId)
+        layui.use(['table', 'form', 'jquery'], function () {
+            let table = layui.table;
+            let form = layui.form;
+            let $ = layui.jquery;
+
+            let cols = [
+                [
+                    {title: '签到开始时间', field: 'createTime', align: 'center',templet: '#signInfo-createTime'},
+                    {title: '签到结束时间', field: 'overTime', align: 'center',templet: '#signInfo-overTime'},
+                ]
+            ];
+
+            table.render({
+                elem: '#signInfo-table',
+                url: '/sign-service/api/sign?courseId='+source.courseId,
+                /*data:{
+                    courseId: source.courseId
+                },*/
+                page: true,
+                cols: cols,
+                skin: 'line',
+                response: {
+                    statusCode: 200 //获取数据成功状态吗
+                },
+                defaultToolbar: [{
+                    layEvent: 'refresh',
+                    icon: 'layui-icon-refresh',
+                }, 'filter', 'print', 'exports']
+            });
+
+            form.on('submit(signInfo-query)', function (data) {
+                table.reload('sign-table', {where: data.field})
+                return false;
+            });
+
+            refresh = function (param) {
+                table.reload('message-table');
+            }
+        })
+    }
+</script>
+</body>
+</html>

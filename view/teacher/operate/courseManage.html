@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="../../../admin/css/pearCommon.css"/>
+    <link rel="stylesheet" href="../../../component/layui/css/layui.css"/>
+</head>
+<body class="pear-container">
+<div class="layui-card">
+    <div class="layui-card-body">
+        <table id="manage-table" lay-filter="manage-table"></table>
+    </div>
+</div>
+
+<script type="text/html" id="manage-toolbar">
+    <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="addMenu">
+        <i class="layui-icon layui-icon-add-1"></i>
+        新增目录
+    </button>
+    <button class="pear-btn layui-bg-green pear-btn-md" lay-event="addVideo">
+        <i class="layui-icon layui-icon-add-1"></i>
+        新增视频
+    </button>
+</script>
+
+<script type="text/html" id="manage-bar">
+    {{# if(d.videoUrl != null && d.videoUrl != ''){ }}
+    <button class="pear-btn pear-btn-primary pear-btn-sm" lay-event="editVideo"><i class="layui-icon layui-icon-edit"></i>
+    </button>
+    <button class="pear-btn pear-btn-danger pear-btn-sm" lay-event="removeVideo"><i class="layui-icon layui-icon-delete"></i>
+    </button>
+    {{# }else{ }}
+    <button class="pear-btn pear-btn-primary pear-btn-sm" lay-event="editMenu"><i class="layui-icon layui-icon-edit"></i>
+    </button>
+    <button class="pear-btn pear-btn-danger pear-btn-sm" lay-event="removeMenu"><i class="layui-icon layui-icon-delete"></i>
+    </button>
+    {{# } }}
+</script>
+
+<script type="text/html" id="video-url">
+    {{# if(d.videoUrl != null && d.videoUrl != ''){ }}
+    <button class="layui-btn layui-btn-radius layui-bg-green layui-btn-sm" lay-event="videoUrl"><i
+            class="layui-icon layui-icon-video"></i>
+    </button>
+    {{# }else{ }}
+    <p></p>
+    {{# } }}
+</script>
+
+</body>
+
+<script src="../../../component/layui/layui.js"></script>
+<script>
+    function child(course) {
+        layui.use(['table', 'form', 'jquery', 'treeTable'], function () {
+            let table = layui.table;
+            var form = layui.form;
+            let $ = layui.jquery;
+            let treeTable = layui.treeTable;
+
+            let cols = [
+                [
+                    {title: '目录', field: 'menuName', align: 'left',width: 190},
+                    {title: '视频名', field: 'videoName', align: 'left'},
+                    {title: '创建时间', field: 'createTime', align: 'center', sort: true},
+                    {title: '视频预览', field: 'videoUrl', align: 'center', templet: '#video-url', width: 120},
+                    {title: '操作', toolbar: '#manage-bar', align: 'center', width: 130}
+                ]
+            ];
+
+            window.renderTable = function(){
+                treeTable.render({
+                    tree: {
+                        iconIndex: 0,  // 折叠图标显示在第几列
+                        idName: 'id',  // 自定义id字段的名称
+                        haveChildName: 'haveChild', // 自定义标识是否还有子节点的字段名称
+                        arrowType: 'arrow2',
+                    },
+                    skin: 'line',
+                    elem: '#manage-table',
+                    page: false,
+                    cols: cols,
+                    reqData: function (data, callback) {
+                        // data是当前行的数据，通过callback回调子集数据
+                        if(data === undefined){
+                            //说明是第一级，即目录
+                            $.ajax({
+                                url: "/course-service/api/menu/menuOfCourse/"+course.courseId,
+                                type: 'get',
+                                success: function (res) {
+                                    let data =  res.data;
+                                    for(let i = 0;i<data.length;i++){
+                                        data[i].haveChild = true;
+                                    }
+                                    console.log(res);
+                                    callback(res.data);
+                                }
+                            })
+                        } else{
+                            //说明是第二级，即视频
+                            $.ajax({
+                                url: "/course-service/api/video/videoOfMenu/"+data.menuId,
+                                type: 'get',
+                                success: function (res) {
+                                    console.log(res);
+                                    callback(res.data);
+                                }
+                            })
+                        }
+                    },
+                    toolbar: '#manage-toolbar',
+                    //自由配置头部工具栏右侧的图标按钮
+                    defaultToolbar: [{
+                        layEvent: 'refresh',
+                        icon: 'layui-icon-refresh',
+                    }, 'filter', 'print', 'exports']
+                });
+            };
+
+            window.renderTable();
+
+            treeTable.on('tool(manage-table)', function (obj) {
+                if (obj.event === 'removeMenu') {
+                    window.removeMenu(obj);
+                } else if (obj.event === 'removeVideo') {
+                    window.removeVideo(obj);
+                } else if (obj.event === 'editMenu') {
+                    window.editMenu(obj);
+                }else if (obj.event === 'editVideo') {
+                    window.editVideo(obj);
+                } else if (obj.event === 'videoUrl') {
+                    window.videoInfo(obj);
+                }
+            });
+
+
+            treeTable.on('toolbar(manage-table)', function (obj) {
+                if (obj.event === 'addMenu') {
+                    window.addMenu();
+                }else if (obj.event === 'addVideo') {
+                    window.addVideo();
+                }else if (obj.event === 'refresh') {
+                    window.refresh();
+                }
+            });
+
+            //右上刷新表格按钮
+            window.refresh = function (param) {
+                window.renderTable();
+            };
+
+            //新增视频弹层
+            window.addVideo = function () {
+                layer.open({
+                    type: 2,
+                    title: '新增视频',
+                    shade: 0.1,
+                    area: ['60%', '95%'],
+                    content: 'addVideo.html',
+                    success: function (layero, index) {
+                        form.render('select');
+                        var iframe = window['layui-layer-iframe' + index];
+                        iframe.child(course);
+                        setTimeout(function () {
+                            layer.tips('点击此处返回', '.layui-layer-setwin .layui-layer-close', {
+                                tips: 3
+                            });
+                        }, 500)
+                    }
+                });
+            };
+
+            //新增目录弹层
+            window.addMenu = function () {
+                layer.open({
+                    type: 2,
+                    title: '新增目录',
+                    shade: 0.1,
+                    area: ['40%', '60%'],
+                    content: 'addMenu.html',
+                    success: function (layero, index) {
+                        form.render('select');
+                        var iframe = window['layui-layer-iframe' + index];
+                        iframe.child(course);
+                        setTimeout(function () {
+                            layer.tips('点击此处返回', '.layui-layer-setwin .layui-layer-close', {
+                                tips: 3
+                            });
+                        }, 500)
+                    }
+                });
+            };
+
+            //修改目录弹层
+            window.editMenu = function (obj) {
+                layer.open({
+                    type: 2,
+                    title: '修改目录',
+                    shade: 0.1,
+                    area: ['40%', '60%'],
+                    content: 'editMenu.html',
+                    success: function (layero, index) {
+                        var iframe = window['layui-layer-iframe' + index];
+                        iframe.child(obj.data,course);
+                        setTimeout(function () {
+                            layer.tips('点击此处返回', '.layui-layer-setwin .layui-layer-close', {
+                                tips: 3
+                            });
+                        }, 500)
+                    }
+                });
+            };
+
+            //修改视频弹层
+            window.editVideo = function (obj) {
+                layer.open({
+                    type: 2,
+                    title: '修改视频',
+                    shade: 0.1,
+                    area: ['60%', '95%'],
+                    content: 'editVideo.html',
+                    success: function (layero, index) {
+                        var iframe = window['layui-layer-iframe' + index];
+                        iframe.child(obj.data,course);
+                        setTimeout(function () {
+                            layer.tips('点击此处返回', '.layui-layer-setwin .layui-layer-close', {
+                                tips: 3
+                            });
+                        }, 500)
+                    }
+                });
+            };
+
+            //删除目录
+            window.removeMenu = function (obj) {
+                layer.confirm('确定删除目录', {icon: 3, title: '提示'}, function (index) {
+                    layer.close(index);
+                    let loading = layer.load();
+                    $.ajax({
+                        url: "/course-service/api/menu/" + obj.data['menuId'],
+                        dataType: 'json',
+                        type: 'delete',
+                        success: function (result) {
+                            layer.close(loading);
+                            if (result.success) {
+                                layer.msg(result.msg, {icon: 1, time: 1000}, function () {
+                                    obj.del();
+                                });
+                            } else {
+                                layer.msg(result.msg, {icon: 2, time: 1000});
+                            }
+                        }
+                    })
+                });
+            };
+
+            //删除视频
+            window.removeVideo = function (obj) {
+                layer.confirm('确定删除视频', {icon: 3, title: '提示'}, function (index) {
+                    layer.close(index);
+                    let loading = layer.load();
+                    $.ajax({
+                        url: "/course-service/api/video/" + obj.data['videoId'],
+                        dataType: 'json',
+                        type: 'delete',
+                        success: function (result) {
+                            layer.close(loading);
+                            if (result.success) {
+                                layer.msg(result.msg, {icon: 1, time: 1000}, function () {
+                                    obj.del();
+                                });
+                            } else {
+                                layer.msg(result.msg, {icon: 2, time: 1000});
+                            }
+                        }
+                    })
+                });
+            };
+
+
+            //预览视频弹层
+            window.videoInfo = function (obj) {
+                layer.open({
+                    type: 2,
+                    title: '预览',
+                    shade: 0.1,
+                    area: ['81.3%', '96.3%'],
+                    content: obj.data.videoUrl,
+                    shadeClose: true,
+                    success: function (layero, index) {
+                        var iframe = window['layui-layer-iframe' + index];
+                        setTimeout(function () {
+                            layer.tips('点击此处返回', '.layui-layer-setwin .layui-layer-close', {
+                                tips: 3
+                            });
+                        }, 500)
+                    }
+                });
+            };
+
+        });
+    }
+
+</script>
+</html>

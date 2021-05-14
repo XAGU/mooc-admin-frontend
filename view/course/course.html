@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <link href="../../component/layui/css/layui.css" rel="stylesheet"/>
+    <link href="../../admin/css/pearCommon.css" rel="stylesheet"/>
+</head>
+<body>
+<body class="pear-container">
+<div class="layui-card">
+    <div class="layui-card-body">
+        <form class="layui-form" action="">
+            <div class="layui-form-item">
+                <label class="layui-form-label">课程名</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="courseName" placeholder="请输入课程名" class="layui-input">
+                </div>
+                <label class="layui-form-label">课程类型</label>
+                <div class="layui-input-inline">
+                    <select name="courseStyle" lay-verify="" lay-search>
+                        <option value="-1"></option>
+                        <option value="0">实战进阶</option>
+                        <option value="1">技术公开课</option>
+                        <option value="2">毕设项目</option>
+                        <option value="3">毕设公开课</option>
+                    </select>
+                </div>
+                <label class="layui-form-label" >科目</label>
+                <div class="layui-input-inline">
+                    <select name="subjectType.subjectId" id="otype" lay-search>
+                        <option value="">请选择</option>
+                    </select>
+                </div>
+                <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="course-query">
+                    <i class="layui-icon layui-icon-search"></i>
+                    查询
+                </button>
+                <button type="reset" class="pear-btn pear-btn-md">
+                    <i class="layui-icon layui-icon-refresh"></i>
+                    重置
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="layui-card">
+    <div class="layui-card-body">
+        <table id="course-table" lay-filter="course-table"></table>
+    </div>
+</div>
+</body>
+
+<script type="text/html" id="course-toolbar">
+    <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="add">
+        <i class="layui-icon layui-icon-add-1"></i>
+        新增
+    </button>
+    <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove">
+        <i class="layui-icon layui-icon-delete"></i>
+        删除
+    </button>
+</script>
+
+<script type="text/html" id="course-bar">
+    <button class="pear-btn pear-btn-primary pear-btn-sm" lay-event="edit"><i class="layui-icon layui-icon-edit"></i>
+    </button>
+    <button class="pear-btn pear-btn-danger pear-btn-sm" lay-event="remove"><i class="layui-icon layui-icon-delete"></i>
+    </button>
+</script>
+
+<script type="text/html" id="course-createTime">
+    {{layui.util.toDateString(d.createTime, 'yyyy-MM-dd HH:mm:ss')}}
+</script>
+
+<script type="text/html" id="course-teacher">
+    <a href="#" style="color: #5FB878" lay-event="teacherInfo" value="{{ d.createrId}}">{{ d.teacher.realName}} >></a>
+</script>
+
+<script type="text/html" id="course-style">
+    <p>
+        {{#  if(d.courseStyle === 0){ }}
+        实战进阶
+        {{#  }if(d.courseStyle === 1){ }}
+        技术公开课
+        {{#  }if(d.courseStyle === 2){ }}
+        毕设项目
+        {{#  }if(d.courseStyle === 3){ }}
+        毕设公开课
+        {{# } }}
+    </p>
+</script>
+
+<script src="../../component/layui/layui.js"></script>
+
+<script>
+    layui.use(['table', 'form', 'jquery'], function () {
+        let table = layui.table;
+        let form = layui.form;
+        let $ = layui.jquery;
+
+
+        let cols = [
+            [
+                {type: 'checkbox'},
+                {title: '课程名', field: 'courseName', align: 'center'},
+                {title: '介绍', field: 'courseInfo', align: 'center'},
+                {title: '封面', field: 'courseCover', align: 'center'},
+                {title: '点击量', field: 'courseClick', align: 'center', sort: true},
+                {title: '课程类型', field: 'courseStyle', align: 'center', templet:'#course-style'},
+                {title: '所属科目', field: 'subjectType', align: 'center', templet:'<p>{{ d.subjectType.subjectName}}</p>'},
+                {title: '老师信息', field: 'realName', align: 'center',templet:'#course-teacher'},
+                {title: '创建时间', field: 'createTime', align: 'center', templet: '#course-createTime',sort: true, width: 180},
+                {title: '操作', toolbar: '#course-bar', align: 'center', width: 130}
+            ]
+        ];
+
+        table.render({
+            elem: '#course-table',  //表格id
+            url: '/course-service/api/course/containSubject',  //异步请求参数
+            page: true,     //开启分页功能
+            cols: cols,     //设置表头。值是一个二维数组。方法渲染方式必填
+            skin: 'line',   //设定表格外观:line（行边框风格）,row（列边框风格）,nob（无边框风格）
+            //开启表格头部工具栏区域
+            toolbar: '#course-toolbar',
+            response: {
+                statusCode: 200 //获取数据成功状态码
+            },
+            //自由配置头部工具栏右侧的图标按钮
+            defaultToolbar: [{
+                layEvent: 'refresh',
+                icon: 'layui-icon-refresh',
+            }, 'filter', 'print', 'exports']
+        });
+
+        table.on('tool(course-table)', function (obj) {
+            if (obj.event === 'remove') {
+                window.remove(obj);
+            } else if (obj.event === 'edit') {
+                window.edit(obj);
+            }else if (obj.event === 'teacherInfo'){
+                teacher(obj);
+            }
+        });
+
+        //监听表头按钮
+        table.on('toolbar(course-table)', function (obj) {
+            if (obj.event === 'add') {
+                window.add();
+            } else if (obj.event === 'refresh') {
+                window.refresh();
+            } else if (obj.event === 'batchRemove') {
+                window.batchRemove(obj);
+            }
+        });
+
+        form.on('submit(course-query)', function (data) {
+            table.reload('course-table', {where: data.field});
+            return false;
+        });
+
+        //新增弹层
+        window.add = function () {
+            layer.open({
+                type: 2,
+                title: '新增',
+                shade: 0.1,
+                area: ['50%', '90%'],
+                content: 'operate/addCourse.html',
+                success: function (layero, index) {
+                    form.render('select');
+                    var iframe = window['layui-layer-iframe' + index];
+                    setTimeout(function () {
+                        layer.tips('点击此处返回', '.layui-layer-setwin .layui-layer-close', {
+                            tips: 3
+                        });
+                    }, 500)
+                }
+            });
+        };
+
+        //修改弹层
+        window.edit = function (obj) {
+            layer.open({
+                type: 2,
+                title: '修改',
+                shade: 0.1,
+                area: ['50%', '90%'],
+                content: 'operate/editCourse.html',
+                success: function (layero, index) {
+                    var iframe = window['layui-layer-iframe' + index];
+                    iframe.child(obj.data);
+                    setTimeout(function () {
+                        layer.tips('点击此处返回', '.layui-layer-setwin .layui-layer-close', {
+                            tips: 3
+                        });
+                    }, 500)
+                }
+            });
+        };
+
+        //删除
+        window.remove = function (obj) {
+            layer.confirm('确定要删除该课程', {icon: 3, title: '提示'}, function (index) {
+                layer.close(index);
+                let loading = layer.load();
+                $.ajax({
+                    url: "/course-service/api/course/" + obj.data['courseId'],
+                    dataType: 'json',
+                    type: 'delete',
+                    success: function (result) {
+                        layer.close(loading);
+                        if (result.success) {
+                            layer.msg(result.msg, {icon: 1, time: 1000}, function () {
+                                obj.del();
+                            });
+                        } else {
+                            layer.msg(result.msg, {icon: 2, time: 1000});
+                        }
+                    }
+                })
+            });
+        };
+
+        //批量删除
+        window.batchRemove = function (obj) {
+            let data = table.checkStatus(obj.config.id).data;
+            if (data.length === 0) {
+                layer.msg("未选中数据", {icon: 3, time: 1000});
+                return false;
+            }
+            let ids = "";
+            for (let i = 0; i < data.length; i++) {
+                ids += data[i].courseId + ",";
+            }
+            console.log(ids);
+            ids = ids.substr(0, ids.length - 1);
+            layer.confirm('确定要删除这些课程', {icon: 3, title: '提示'}, function (index) {
+                layer.close(index);
+                let loading = layer.load();
+                $.ajax({
+                    url: "/course-service/api/course/" + ids,
+                    dataType: 'json',
+                    type: 'delete',
+                    success: function (result) {
+                        layer.close(loading);
+                        if (result.success) {
+                            layer.msg(result.msg, {icon: 1, time: 1000}, function () {
+                                table.reload('course-table');
+                            });
+                        } else {
+                            layer.msg(result.msg, {icon: 2, time: 1000});
+                        }
+                    }
+                })
+            });
+        };
+
+        //右上刷新表格按钮
+        window.refresh = function (param) {
+            table.reload('course-table');
+        };
+
+        //加载科目类型的下拉菜单
+        $.ajax({
+            url: '/course-service/api/subject?page=1&limit=999',
+            dataType: 'json',
+            type: 'get',
+            success: function (data) {
+                $.each(data.data, function (index, item) {
+                    $('#otype').append(new Option(item.subjectName, item.subjectId));// 下拉菜单里添加元素
+                });
+                layui.form.render("select");
+            }
+        });
+
+        function teacher(obj) {
+            layer.open({
+                type: 2,
+                title: '老师信息',
+                shade: 0.1,
+                area: ['25%', '80%'],
+                content: 'operate/teacherInfo.html',
+                shadeClose:true,
+                success: function (layero, index) {
+                    var iframe = window['layui-layer-iframe' + index];
+                    iframe.child(obj.data);
+                    setTimeout(function () {
+                        layer.tips('点击此处返回', '.layui-layer-setwin .layui-layer-close', {
+                            tips: 3
+                        });
+                    }, 500)
+                }
+            });
+        }
+    });
+
+
+
+</script>
+
+</body>
+</html>

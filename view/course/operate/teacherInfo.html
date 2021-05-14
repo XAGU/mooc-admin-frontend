@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="../../../admin/css/pearCommon.css" />
+    <link rel="stylesheet" href="../../../component/layui/css/layui.css" />
+</head>
+<body>
+<form class="layui-form" action="">
+    <div class="mainBox">
+        <div class="main-container">
+            <div class="main-container">
+                <div id="view">
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script id="teacherInfo" type="text/html">
+    <div class="layui-form-item">
+        <img src="{{ d.teacher.headImg}}" style="width: 150px;height: 150px">
+    </div>
+    <div class="layui-form-item">
+        <p style="color: #5FB878"><b><i class="layui-icon layui-icon-username"></i>姓名：</b></p>
+        <p >{{ d.teacher.realName}}</p>
+    </div>
+    <div class="layui-form-item">
+        <p style="color: #5FB878"><b><i class="layui-icon layui-icon-cellphone"></i>电话：</b></p>
+        <p >{{ d.teacher.phoneNum}}</p>
+    </div>
+    <div class="layui-form-item">
+        <p style="color: #5FB878"><b><i class="layui-icon layui-icon-email"></i>邮箱：</b></p>
+        <p >{{ d.teacher.email}}</p>
+    </div>
+    <div class="layui-form-item">
+        <p style="color: #5FB878"><b><i class="layui-icon layui-icon-about"></i>介绍：</b></p>
+        <p >{{ d.teacher.desc}}</p>
+    </div>
+</script>
+<script src="../../../component/layui/layui.js"></script>
+
+
+<script>
+    function child(data) {
+        layui.use('laytpl', function(){
+            var laytpl = layui.laytpl;
+
+            var getTpl = teacherInfo.innerHTML
+                ,view = document.getElementById('view');
+            laytpl(getTpl).render(data, function(html){
+                view.innerHTML = html;
+            });
+        })
+    }
+</script>
+</body>
+</html>

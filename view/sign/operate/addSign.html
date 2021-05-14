@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="../../../admin/css/pearCommon.css"/>
+    <link rel="stylesheet" href="../../../component/layui/css/layui.css"/>
+    <style>
+        .headImg .layui-form-label {
+            line-height: 80px;
+            float: left;
+        }
+
+        .headImg .layui-form-label {
+            line-height: 80px;
+        }
+
+        .layui-upload-headImage img {
+            width: 80px;
+            height: 80px;
+            margin-left: 35px;
+        }
+
+        .upload-progress {
+            margin-top: -10px;
+        }
+
+        .upload-btn {
+            line-height: 80px;
+        }
+    </style>
+</head>
+<body>
+<form class="layui-form" action="">
+    <div class="mainBox">
+        <div class="main-container">
+            <div class="main-container">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">课程Id</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="courseId" lay-verify="required" autocomplete="off" placeholder="请输入课程id"
+                               class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">结束时间</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="overTime" lay-verify="required" autocomplete="off" placeholder="请输入结束时间"
+                               class="layui-input">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="bottom">
+        <div class="button-container">
+            <button type="submit" class="layui-btn layui-btn-normal layui-btn-sm" lay-submit="" lay-filter="sign-save">
+                <i class="layui-icon layui-icon-ok"></i>
+                提交
+            </button>
+            <button type="reset" class="layui-btn layui-btn-primary layui-btn-sm">
+                <i class="layui-icon layui-icon-refresh"></i>
+                重置
+            </button>
+        </div>
+    </div>
+</form>
+<script src="../../../component/layui/layui.js"></script>
+<script>
+    layui.use(['form', 'jquery', 'element'], function () {
+        let form = layui.form;
+        let $ = layui.jquery;
+        let element = layui.element;
+
+        form.on('submit(sign-save)', function (data) {
+
+            if (data.field.enable === undefined) {
+                data.field.enable = 0;
+            }
+            $.ajax({
+                url: '/sign-service/api/sign',
+                data: data.field,
+                type: 'post',
+                success: function (result) {
+                    if (result.success) {
+                        layer.msg(result.msg, {icon: 1, time: 1000}, function () {
+                            parent.layer.close(parent.layer.getFrameIndex(window.name));//关闭当前页
+                            parent.layui.table.reload("sign-table");//刷新主页面表格
+                        });
+                    } else {
+                        layer.msg(result.msg, {icon: 2, time: 1000});
+                    }
+                }
+            });
+            return false;
+        });
+
+    })
+</script>
+<script>
+</script>
+</body>
+</html>

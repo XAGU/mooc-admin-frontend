@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <link href="../../component/layui/css/layui.css" rel="stylesheet"/>
+    <link href="../../admin/css/pearCommon.css" rel="stylesheet"/>
+</head>
+<body>
+<body class="pear-container">
+<!--头部查询-->
+<div class="layui-card">
+    <div class="layui-card-body">
+        <form class="layui-form" action="">
+            <div class="layui-form-item">
+                <label class="layui-form-label">标题</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="messageName" placeholder="" class="layui-input">
+                </div>
+                <label class="layui-form-label">内容</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="messageContent" placeholder="" class="layui-input">
+                </div>
+                <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="message-query">
+                    <i class="layui-icon layui-icon-search"></i>
+                    查询
+                </button>
+                <button type="reset" class="pear-btn pear-btn-md">
+                    <i class="layui-icon layui-icon-refresh"></i>
+                    重置
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<!--表格展示-->
+<div class="layui-card">
+    <div class="layui-card-body">
+        <table id="message-table" lay-filter="message-table"></table>
+    </div>
+</div>
+</body>
+
+<!--顶部新增和删除工具栏-->
+<script type="text/html" id="message-toolbar">
+    <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="add">
+        <i class="layui-icon layui-icon-add-1"></i>
+        新增
+    </button>
+    <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove">
+        <i class="layui-icon layui-icon-delete"></i>
+        删除
+    </button>
+</script>
+
+<!--行工具栏-->
+<script type="text/html" id="message-bar">
+    <button class="pear-btn pear-btn-primary pear-btn-sm" lay-event="edit"><i class="layui-icon layui-icon-edit"></i>
+    </button>
+    <button class="pear-btn pear-btn-danger pear-btn-sm" lay-event="remove"><i class="layui-icon layui-icon-delete"></i>
+    </button>
+</script>
+
+
+<script type="text/html" id="message-createTime">
+    {{layui.util.toDateString(createTime, 'yyyy-MM-dd HH:mm:ss')}}
+</script>
+
+<script src="../../component/layui/layui.js"></script>
+<script>
+    layui.use(['table', 'form', 'jquery'], function () {
+        let table = layui.table;
+        let form = layui.form;
+        let $ = layui.jquery;
+
+        let cols = [
+            [
+                {type: 'checkbox'},
+                {title: '标题', field: 'messageName', align: 'center', width: 100},
+                {title: '内容', field: 'messageContent', align: 'center'},
+                {title: '发布时间', field: 'createTime', align: 'center',template:'message-createTime'},
+                {title: '操作', toolbar: '#message-bar', align: 'center', width: 130}
+            ]
+        ];
+
+        table.render({
+            elem: '#message-table',
+            url: '/message-service/api/message',
+            page: true,
+            cols: cols,
+            skin: 'line',
+            toolbar: '#message-toolbar',
+            response: {
+                statusCode: 200 //获取数据成功状态吗
+            },
+            defaultToolbar: [{
+                layEvent: 'refresh',
+                icon: 'layui-icon-refresh',
+            }, 'filter', 'print', 'exports']
+        });
+
+        table.on('tool(message-table)', function (obj) {
+            if (obj.event === 'remove') {
+                remove(obj);
+            } else if (obj.event === 'edit') {
+                edit(obj);
+            }
+        });
+
+        table.on('toolbar(message-table)', function (obj) {
+            if (obj.event === 'add') {
+                add();
+            } else if (obj.event === 'refresh') {
+                //刷新
+                refresh();
+            } else if (obj.event === 'batchRemove') {
+                batchRemove(obj);
+            }
+        });
+
+        form.on('submit(message-query)', function (data) {
+            table.reload('message-table', {where: data.field})
+            return false;
+        });
+
+
+        add = function () {
+            layer.open({
+                type: 2,
+                title: '新增',
+                shade: 0.1,
+                area: ['35%', '60%'],
+                content: 'operate/addMessage.html'
+            });
+        };
+
+        edit = function (obj) {
+            layer.open({
+                type: 2,
+                title: '修改',
+                shade: 0.1,
+                area: ['35%', '60%'],
+                content: 'operate/editMessage.html',
+                success: function (layero, index) {
+                    var iframe = window['layui-layer-iframe' + index];
+                    iframe.child(obj.data);
+                    setTimeout(function () {
+                        layer.tips('点击此处返回', '.layui-layer-setwin .layui-layer-close', {
+                            tips: 3
+                        });
+                    }, 500)
+                }
+            });
+        };
+
+        remove = function (obj) {
+            layer.confirm('确定要删除该公告', {icon: 3, title: '提示'}, function (index) {
+                layer.close(index);
+                let loading = layer.load();
+                $.ajax({
+                    url: "/message-service/api/message/" + obj.data['messageId'],
+                    dataType: 'json',
+                    type: 'delete',
+                    success: function (result) {
+                        layer.close(loading);
+                        if (result.success) {
+                            layer.msg(result.msg, {icon: 1, time: 1000}, function () {
+                                obj.del();
+                            });
+                        } else {
+                            layer.msg(result.msg, {icon: 2, time: 1000});
+                        }
+                    }
+                })
+            });
+        };
+
+        batchRemove = function (obj) {
+            let data = table.checkStatus(obj.config.id).data;
+            if (data.length === 0) {
+                layer.msg("未选中数据", {icon: 3, time: 1000});
+                return false;
+            }
+            let ids = "";
+            for (let i = 0; i < data.length; i++) {
+                ids += data[i].messageId + ",";
+            }
+            ids = ids.substr(0, ids.length - 1);
+            layer.confirm('确定要删除这些公告', {icon: 3, title: '提示'}, function (index) {
+                layer.close(index);
+                let loading = layer.load();
+                $.ajax({
+                    url: "/message-service/api/message/" + ids,
+                    dataType: 'json',
+                    type: 'delete',
+                    success: function (result) {
+                        layer.close(loading);
+                        if (result.success) {
+                            layer.msg(result.msg, {icon: 1, time: 1000}, function () {
+                                table.reload('message-table');//重新加载表格
+                            });
+                        } else {
+                            layer.msg(result.msg, {icon: 2, time: 1000});
+                        }
+                    }
+                })
+            });
+        };
+
+        refresh = function (param) {
+            table.reload('message-table');
+        }
+    })
+</script>
+</body>
+</html>

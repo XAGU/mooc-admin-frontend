@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="../../../admin/css/pearCommon.css" />
+    <link rel="stylesheet" href="../../../component/layui/css/layui.css" />
+</head>
+<body>
+<form class="layui-form" action="">
+    <div class="mainBox">
+        <div class="main-container">
+            <div class="main-container">
+                <div id="view">
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script id="courseInfo" type="text/html">
+    <div class="layui-form-item">
+        <img src="{{ d.courseCover}}" style="width: 80%; height: 125px">
+    </div>
+    <div class="layui-form-item">
+        <p style="color: #5FB878"><b><i class="layui-icon layui-icon-read"></i>课程名：</b></p>
+        <p >{{ d.courseName}}</p>
+    </div>
+    <div class="layui-form-item">
+        <p style="color: #5FB878"><b><i class="layui-icon layui-icon-component"></i>课程类型：</b></p>
+        <p >{{#if(d.courseStyle === 0){}}实习实训{{#}if(d.courseStyle === 1){}}实战进阶{{#}if(d.courseStyle === 2){}}技术公开课{{#}if(d.courseStyle === 3){}}毕设指导{{#}}}</p>
+    </div>
+    <div class="layui-form-item">
+        <p style="color: #5FB878"><b><i class="layui-icon layui-icon-star"></i>点击量：</b></p>
+        <p >{{ d.courseClick}}次</p>
+    </div>
+    <div class="layui-form-item">
+        <p style="color: #5FB878"><b><i class="layui-icon layui-icon-date"></i>创建时间：</b></p>
+        <p >{{ d.createTime}}</p>
+    </div>
+    <div class="layui-form-item">
+        <p style="color: #5FB878"><b><i class="layui-icon layui-icon-about"></i>课程介绍：</b></p>
+        <p >{{ d.courseInfo}}</p>
+    </div>
+</script>
+<script src="../../../component/layui/layui.js"></script>
+
+
+<script>
+    function child(data) {
+        layui.use('laytpl', function(){
+            var laytpl = layui.laytpl;
+
+            var getTpl = courseInfo.innerHTML
+                ,view = document.getElementById('view');
+            laytpl(getTpl).render(data, function(html){
+                view.innerHTML = html;
+            });
+        })
+    }
+</script>
+</body>
+</html>

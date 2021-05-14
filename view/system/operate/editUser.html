@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="../../../admin/css/pearCommon.css"/>
+    <link rel="stylesheet" href="../../../component/layui/css/layui.css"/>
+    <style>
+        .headImg .layui-form-label {
+            line-height: 80px;
+            float: left;
+        }
+
+        .headImg .layui-form-label {
+            line-height: 80px;
+        }
+
+        .layui-upload-headImage img {
+            width: 80px;
+            height: 80px;
+            margin-left: 35px;
+            border-radius: 50%;
+        }
+
+        .upload-progress {
+            margin-top: -10px;
+        }
+
+        .upload-btn {
+            line-height: 80px;
+        }
+    </style>
+</head>
+<body>
+<form class="layui-form" action="">
+    <div class="mainBox">
+        <div class="main-container load-div">
+            <div class="main-container">
+                <div class="layui-form-item layui-hide">
+                    <label class="layui-form-label">编号</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="userId" lay-verify="title" autocomplete="off" placeholder="请输入编号"
+                               class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">账号状态</label>
+                    <div class="layui-input-block">
+                        <input type="checkbox" name="enable" value="1" lay-skin="switch" lay-text="启用|冻结" checked>
+                    </div>
+                </div>
+                <div class="layui-form-item headImg">
+                    <label class="layui-form-label">头像</label>
+                    <div class="layui-input-inline">
+                        <div class="layui-upload">
+                            <input type="hidden" name="headImg" value="/upload/img/default_head.jpg" id="headImg">
+                            <div class="layui-upload-headImage">
+                                <img class="layui-upload-img">
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="layui-inline upload-btn">
+                        <button type="button" class="layui-btn layui-btn-primary" id="upload_img">上传头像</button>
+                        <div class="layui-progress upload-progress" lay-filter="upload-progress">
+                            <div class="layui-progress-bar" lay-percent="0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">账号</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="username" lay-verify="required" autocomplete="off" placeholder="请输入账号"
+                               class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">姓名</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="realName" lay-verify="required" autocomplete="off" placeholder="请输入姓名"
+                               class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">电话</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="phoneNum" lay-verify="phone" autocomplete="off" placeholder="请输入电话"
+                               class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">邮箱</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="email" lay-verify="email" autocomplete="off" placeholder="请输入邮箱"
+                               class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">学校</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="schoolName" lay-verify="required" autocomplete="off"
+                               placeholder="请输入学校信息"
+                               class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">角色</label>
+                    <div class="layui-input-block">
+                        <select name="roleId" id="roleId">
+                            <option value="">请选择</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">个人介绍</label>
+                    <div class="layui-input-block">
+                        <textarea name="desc" lay-verify="title" autocomplete="off" placeholder="个人介绍"
+                                  class="layui-textarea"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="bottom">
+        <div class="button-container">
+            <button type="submit" class="layui-btn layui-btn-normal layui-btn-sm" lay-submit="" lay-filter="user-save">
+                <i class="layui-icon layui-icon-ok"></i>
+                提交
+            </button>
+            <button type="reset" class="layui-btn layui-btn-primary layui-btn-sm">
+                <i class="layui-icon layui-icon-refresh"></i>
+                重置
+            </button>
+        </div>
+    </div>
+</form>
+<script src="../../../component/layui/layui.js"></script>
+<script>
+    function child(user) {
+        layui.use(['form', 'jquery','upload','element'], function () {
+            let form = layui.form;
+            let $ = layui.jquery;
+            let element = layui.element;
+            var upload = layui.upload;
+
+
+            $("input[name='userId']").val(user.userId);
+            $("input[name='headImg']").val(user.headImg);
+            $(".layui-upload-img").attr("src", user.headImg);
+            $("input[name='username']").val(user.username);
+            $("input[name='realName']").val(user.realName);
+            $("input[name='phoneNum']").val(user.phoneNum);
+            $("input[name='email']").val(user.email);
+            $("input[name='schoolName']").val(user.schoolName);
+            $("textarea[name='desc']").val(user.desc);
+            $("input[name='enable'][value= " + user.enable + "]").attr("checked", "true");
+
+
+            //加载角色数据
+            function renderSelectRoles() {
+                $.ajax({
+                    url: '/user-service/api/role?page=1&limit=999',
+                    dataType: 'json',
+                    contentType: 'application/json',
+                    type: 'get',
+                    success: function (result) {
+                        if (result.code === 200) {
+                            for (let i = 0; i < result.data.length; i++) {
+                                var html = "<option value=\"" + result.data[i].roleId + "\" " + (result.data[i].roleId === user.roleId ? "selected" : "") + ">" + result.data[i].roleName + "</option>";
+                                $("#roleId").append(html);
+                            }
+                            //重新渲染
+                            form.render("select");
+                        } else {
+                            layer.msg(result.msg, {icon: 2, time: 1000});
+                        }
+                    }
+                })
+            }
+
+            renderSelectRoles();
+
+            form.on('submit(user-save)', function (data) {
+
+                if (data.field.enable === undefined) {
+                    data.field.enable = 0;
+                }
+                $.ajax({
+                    url: '/user-service/api/user',
+                    data: data.field,
+                    type: 'put',
+                    success: function (result) {
+                        if (result.success) {
+                            layer.msg(result.msg, {icon: 1, time: 1000}, function () {
+                                parent.layer.close(parent.layer.getFrameIndex(window.name));//关闭当前页
+                                parent.layui.table.reload("user-table");
+                            });
+                        } else {
+                            layer.msg(result.msg, {icon: 2, time: 1000});
+                        }
+                    }
+                });
+                return false;
+            });
+
+            //执行实例
+            var uploadInst = upload.render({
+                elem: '#upload_img' //绑定元素
+                , url: '/upload' //上传接口
+                , accept: 'images'
+                , acceptMime: 'image/*'
+                , size: 200
+                , progress: function (n, elem) {
+                    var percent = n + '%' //获取进度百分比
+                    element.progress('upload-progress', percent); //可配合 layui 进度条元素使用
+                }
+                , done: function (res, index, upload) {
+                    //上传完毕回调
+                    if (res.code === 200) {
+                        $("input[name='headImg']").val(res.data);
+                        $(".layui-upload-img").attr("src", res.data);
+                        layer.msg(res.msg, {icon: 1, time: 1000});
+                    }
+                }
+                , error: function (index, upload) {
+                    //请求异常回调
+                    layer.msg("上传失败", {icon: 2, time: 1000});
+                }
+                , choose: function (obj) {
+                    element.progress('upload-progress', 0);
+                }
+            });
+        });
+    }
+</script>
+<script>
+</script>
+</body>
+</html>

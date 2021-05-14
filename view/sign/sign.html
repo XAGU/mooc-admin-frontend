@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <link href="../../component/layui/css/layui.css" rel="stylesheet" />
+    <link href="../../admin/css/pearCommon.css" rel="stylesheet" />
+</head>
+
+<body>
+
+    <body class="pear-container">
+        <!--头部查询-->
+        <div class="layui-card">
+            <div class="layui-card-body">
+                <form class="layui-form" action="">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">课程</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="courseId" placeholder="" class="layui-input">
+                        </div>
+                        <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="sign-query">
+                            <i class="layui-icon layui-icon-search"></i>
+                            查询
+                        </button>
+                        <button type="reset" class="pear-btn pear-btn-md">
+                            <i class="layui-icon layui-icon-refresh"></i>
+                            重置
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!--表格展示-->
+        <div class="layui-card">
+            <div class="layui-card-body">
+                <table id="sign-table" lay-filter="sign-table"></table>
+            </div>
+        </div>
+    </body>
+
+    <!--顶部新增和删除工具栏-->
+    <script type="text/html" id="sign-toolbar">
+        <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="add">
+            <i class="layui-icon layui-icon-add-1"></i>
+            新增
+        </button>
+        <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove">
+            <i class="layui-icon layui-icon-delete"></i>
+            删除
+        </button>
+    </script>
+
+    <!--行工具栏-->
+    <script type="text/html" id="sign-bar">
+        <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="detail">查看</a>
+    </script>
+
+    <script type="text/html" id="sign-createTime">
+        {{layui.util.toDateString(createTime, 'yyyy-MM-dd HH:mm:ss')}}
+    </script>
+
+    <script src="../../component/layui/layui.js"></script>
+    <script>
+        layui.use(['table', 'form', 'jquery'], function () {
+            let table = layui.table;
+            let form = layui.form;
+            let $ = layui.jquery;
+
+            let cols = [
+                [{
+                        type: 'checkbox'
+                    },
+                    {
+                        title: '课程名',
+                        field: 'courseName',
+                        align: 'center'
+                    },
+                    {
+                        title: '查看签到信息',
+                        toolbar: '#sign-bar',
+                        align: 'center'
+                    }
+                ]
+            ];
+
+            table.render({
+                elem: '#sign-table',
+                url: '/course-service/api/course',
+                page: true,
+                cols: cols,
+                skin: 'line',
+                toolbar: '#sign-toolbar',
+                response: {
+                    statusCode: 200 //获取数据成功状态吗
+                },
+                defaultToolbar: [{
+                    layEvent: 'refresh',
+                    icon: 'layui-icon-refresh',
+                }, 'filter', 'print', 'exports']
+            });
+
+            table.on('tool(sign-table)', function (obj) {
+                if (obj.event === 'detail') {
+                    detail(obj);
+                }
+            });
+
+            table.on('toolbar(sign-table)', function (obj) {
+                if (obj.event === 'refresh') {
+                    //刷新
+                    refresh();
+                }
+            });
+
+            form.on('submit(sign-query)', function (data) {
+                table.reload('sign-table', {
+                    where: data.field
+                })
+                return false;
+            });
+
+            detail = function (obj) {
+                layer.open({
+                    type: 2,
+                    title: '查看',
+                    shade: 0.1,
+                    area: ['50%', '80%'],
+                    content: 'operate/signInfo.html',
+                    success: function (layero, index) {
+                        var iframe = window['layui-layer-iframe' + index];
+                        iframe.child(obj.data);
+                        setTimeout(function () {
+                            layer.tips('点击此处返回',
+                                '.layui-layer-setwin .layui-layer-close', {
+                                    tips: 3
+                                });
+                        }, 500)
+                    }
+                });
+            };
+
+            //监听表头按钮
+            table.on('toolbar(sign-table)', function (obj) {
+                if (obj.event === 'add') {
+                    window.add();
+                } else if (obj.event === 'refresh') {
+                    window.refresh();
+                } else if (obj.event === 'batchRemove') {
+                    window.batchRemove(obj);
+                }
+            });
+
+            refresh = function (param) {
+                table.reload('sign-table');
+            }
+
+            //新增弹层
+            window.add = function () {
+                layer.open({
+                    type: 2,
+                    title: '新增',
+                    shade: 0.1,
+                    area: ['50%', '90%'],
+                    content: 'operate/addSign.html',
+                    success: function (layero, index) {
+                        form.render('select');
+                        var iframe = window['layui-layer-iframe' + index];
+                        setTimeout(function () {
+                            layer.tips('点击此处返回',
+                                '.layui-layer-setwin .layui-layer-close', {
+                                    tips: 3
+                                });
+                        }, 500)
+                    }
+                });
+            };
+        })
+    </script>
+</body>
+
+</html>

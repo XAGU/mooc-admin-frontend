@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>添加实训方案</title>
+    <link href="../../../component/layui/css/layui.css" rel="stylesheet"/>
+    <link href="../../../admin/css/pearCommon.css" rel="stylesheet"/>
+    <style>
+        .practicalCover .layui-form-label {
+            line-height: 150px;
+            float: left;
+        }
+
+        .practicalCover .layui-form-label {
+            line-height: 150px;
+        }
+        .default_img{
+            width: 250px;
+            height: 150px;
+            margin-left: 35px;
+        }
+
+        .layui-upload-practicalCover img {
+            width: 250px;
+            height: 150px;
+        }
+
+        .upload-progress {
+            margin-top: -10px;
+        }
+
+        .upload-btn {
+            margin-left: 80px;
+            line-height: 55px;
+            margin-top: 95px;
+        }
+    </style>
+</head>
+<body>
+<form class="layui-form" action="">
+    <div class="mainBox">
+        <div class="main-container">
+            <div class="main-container">
+                <div class="layui-form-item practicalCover">
+                    <label class="layui-form-label">方案封面</label>
+                    <div class="layui-input-inline default_img">
+                        <div class="layui-upload">
+                            <input type="hidden" name="practicalCover" value="/upload/img/default_practicalCover.jpg"
+                                   id="practicalCover">
+                            <div class="layui-upload-practicalCover">
+                                <img class="layui-upload-img" src="/upload/img/default_practicalCover.jpg">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-inline upload-btn">
+                        <button type="button" class="layui-btn layui-btn-primary" style="color: #51A351"
+                                id="upload_img">
+                            <i class="layui-icon">&#xe67c;</i>上传封面
+                        </button>
+                        <div class="layui-progress upload-progress" lay-filter="upload-progress">
+                            <div class="layui-progress-bar" lay-percent="0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">方案名</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="practicalName" lay-verify="required" autocomplete="off" placeholder="请输入方案名"
+                               class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">方案链接</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="practicalUrl" lay-verify="required" autocomplete="off"
+                               placeholder="请输入方案链接"
+                               class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label" >科目</label>
+                    <div class="layui-input-block">
+                        <select name="subjectType.subjectId" id="otype" lay-verify="required" lay-search>
+                            <option value="">请选择</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="bottom">
+        <div class="button-container">
+            <button type="submit" class="layui-btn layui-btn-normal layui-btn-sm" lay-submit="" lay-filter="practical-save">
+                <i class="layui-icon layui-icon-ok"></i>
+                提交
+            </button>
+            <button type="reset" class="layui-btn layui-btn-primary layui-btn-sm">
+                <i class="layui-icon layui-icon-refresh"></i>
+                重置
+            </button>
+        </div>
+    </div>
+</form>
+<script src="../../../component/layui/layui.js"></script>
+<script>
+    layui.use(['form', 'jquery', 'element', 'upload'], function () {
+        let form = layui.form;
+        let $ = layui.jquery;
+        let element = layui.element;
+        var upload = layui.upload;
+
+        //方案封面图片上传
+        var uploadInst = upload.render({
+            elem: '#upload_img' //上传按钮的id值
+            , url: '/upload' //图片上传
+            , accept: 'images'  //指定允许上传时校验的文件类型，images（图片）、file（所有文件）、video（视频）、audio（音频）
+            , acceptMime: 'image/*' //规定打开文件选择框时，筛选出的文件类型
+            , size: 5000   //图片最大5M
+            , progress: function (n, elem) {
+                var percent = n + '%';  //获取进度百分比
+                element.progress('upload-progress', percent); //可配合 layui 进度条元素使用
+            }
+            , done: function (res, index, upload) {
+                //上传完毕回调
+                if (res.code === 200) {
+                    $("input[name='practicalCover']").val(res.data);
+                    $(".layui-upload-img").attr("src", res.data);
+                    layer.msg(res.msg, {icon: 1, time: 1000});
+                }
+            }
+            , error: function (index, upload) {
+                //请求异常回调
+                layer.msg("上传失败", {icon: 2, time: 1000});
+            }
+            , choose: function (obj) {
+                element.progress('upload-progress', 0);
+            }
+        });
+
+        //加载科目类型的下拉菜单
+        $.ajax({
+            url: '/course-service/api/subject?page=1&limit=999',
+            dataType: 'json',
+            type: 'get',
+            success: function (data) {
+                $.each(data.data, function (index, item) {
+                    $('#otype').append(new Option(item.subjectName, item.subjectId));// 下拉菜单里添加元素
+                });
+                layui.form.render("select");
+            }
+        });
+
+        //提交操作
+        form.on('submit(practical-save)', function (data) {
+
+            if (data.field.enable === undefined) {
+                data.field.enable = 0;
+            }
+            $.ajax({
+                url: '/practical-service/api/practical',
+                data: data.field,
+                type: 'post',
+                success: function (result) {
+                    if (result.success) {
+                        layer.msg(result.msg, {icon: 1, time: 1000}, function () {
+                            parent.layer.close(parent.layer.getFrameIndex(window.name));//关闭当前页
+                            parent.layui.table.reload("practical-table");
+                        });
+                    } else {
+                        layer.msg(result.msg, {icon: 2, time: 1000});
+                    }
+                }
+            });
+            return false;
+        });
+    });
+</script>
+</body>
+</html>

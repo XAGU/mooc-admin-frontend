@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>添加课程</title>
+    <link href="../../../component/layui/css/layui.css" rel="stylesheet"/>
+    <link href="../../../admin/css/pearCommon.css" rel="stylesheet"/>
+</head>
+<body>
+<form class="layui-form" action="">
+    <div class="mainBox">
+        <div class="main-container">
+            <div class="main-container">
+                <div class="layui-form-item layui-hide">
+                    <label class="layui-form-label">编号</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="menuId" lay-verify="title" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">目录名</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="menuName" lay-verify="required" autocomplete="off" placeholder="请输入目录名"
+                               class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-input-block layui-hide" id="view">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="bottom">
+        <div class="button-container">
+            <button type="submit" class="layui-btn layui-btn-normal layui-btn-sm" lay-submit="" lay-filter="menu-save">
+                <i class="layui-icon layui-icon-ok"></i>
+                提交
+            </button>
+            <button type="reset" class="layui-btn layui-btn-primary layui-btn-sm">
+                <i class="layui-icon layui-icon-refresh"></i>
+                重置
+            </button>
+        </div>
+    </div>
+</form>
+<script type="text/html" id="course_id">
+    <input type="text" name="course.courseId" value="{{ d.courseId}}" class="layui-input layui-hide">
+</script>
+<script src="../../../component/layui/layui.js"></script>
+<script>
+    function child(menu,course) {
+        layui.use(['form', 'jquery', 'element','laytpl'], function () {
+            let form = layui.form;
+            let $ = layui.jquery;
+            let element = layui.element;
+            let laytpl =layui.laytpl;
+
+            $("input[name='menuId']").val(menu.menuId);
+            $("input[name='menuName']").val(menu.menuName);
+
+            var getTpl = course_id.innerHTML
+                ,view = document.getElementById('view');
+            laytpl(getTpl).render(course, function(html){
+                view.innerHTML = html;
+            });
+
+            //提交操作
+            form.on('submit(menu-save)', function (data) {
+
+                if (data.field.enable === undefined) {
+                    data.field.enable = 0;
+                }
+                $.ajax({
+                    url: '/course-service/api/menu',
+                    data: data.field,
+                    type: 'put',
+                    success: function (result) {
+                        if (result.success) {
+                            layer.msg(result.msg, {icon: 1, time: 1000}, function () {
+                                parent.layer.close(parent.layer.getFrameIndex(window.name));//关闭当前页
+                                window.parent.renderTable();
+                            });
+                        } else {
+                            layer.msg(result.msg, {icon: 2, time: 1000});
+                        }
+                    }
+                });
+                return false;
+            });
+        });
+    }
+</script>
+</body>
+</html>

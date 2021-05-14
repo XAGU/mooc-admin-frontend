@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="../../../admin/css/pearCommon.css"/>
+    <link rel="stylesheet" href="../../../component/layui/css/layui.css"/>
+    <style>
+        .headImg .layui-form-label {
+            line-height: 80px;
+            float: left;
+        }
+
+        .headImg .layui-form-label {
+            line-height: 80px;
+        }
+
+        .layui-upload-headImage img {
+            width: 80px;
+            height: 80px;
+            margin-left: 35px;
+        }
+
+        .upload-progress {
+            margin-top: -10px;
+        }
+
+        .upload-btn {
+            line-height: 80px;
+        }
+    </style>
+</head>
+<body>
+<form class="layui-form" action="" lay-filter="message_form">
+    <div class="mainBox">
+        <div class="main-container load-div">
+            <div class="main-container">
+                <div class="layui-form-item layui-hide">
+                    <label class="layui-form-label ">编号</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="messageId" lay-verify="required" autocomplete="off"
+                               class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">标题</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="messageName" lay-verify="required" autocomplete="off" placeholder="请输入公告标题"
+                               class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">内容</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="messageContent" lay-verify="required" autocomplete="off" placeholder="请输入公告内容"
+                               class="layui-input">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="bottom">
+        <div class="button-container">
+            <button type="submit" class="layui-btn layui-btn-normal layui-btn-sm" lay-submit="" lay-filter="message-save">
+                <i class="layui-icon layui-icon-ok"></i>
+                提交
+            </button>
+            <button type="reset" class="layui-btn layui-btn-primary layui-btn-sm">
+                <i class="layui-icon layui-icon-refresh"></i>
+                重置
+            </button>
+        </div>
+    </div>
+</form>
+<script src="../../../component/layui/layui.js"></script>
+<script>
+    function child(message) {
+        layui.use(['form', 'jquery','upload','element'], function () {
+            let form = layui.form;
+            let $ = layui.jquery;
+            let element = layui.element;
+            var upload = layui.upload;
+
+
+            //给表单赋值
+            form.val("message_form", { //formTest 即 class="layui-form" 所在元素属性 lay-filter="" 对应的值
+                "messageId": message.messageId,
+                "messageName": message.messageName, // "name": "value"
+                "messageContent": message.messageContent
+            });
+
+            form.on('submit(message-save)', function (data) {
+                $.ajax({
+                    url: '/message-service/api/message',
+                    data: data.field,
+                    type: 'put',
+                    success: function (result) {
+                        if (result.success) {
+                            layer.msg(result.msg, {icon: 1, time: 1000}, function () {
+                                parent.layer.close(parent.layer.getFrameIndex(window.name));//关闭当前页
+                                parent.layui.table.reload("message-table");
+                            });
+                        } else {
+                            layer.msg(result.msg, {icon: 2, time: 1000});
+                        }
+                    }
+                });
+                return false;
+            });
+        });
+    }
+</script>
+<script>
+</script>
+</body>
+</html>

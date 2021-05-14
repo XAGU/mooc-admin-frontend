@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <link href="../../component/layui/css/layui.css" rel="stylesheet"/>
+    <link href="../../admin/css/pearCommon.css" rel="stylesheet"/>
+</head>
+<body>
+<body class="pear-container">
+<div class="layui-card">
+    <div class="layui-card-body">
+        <form class="layui-form" action="">
+            <div class="layui-form-item">
+                <label class="layui-form-label">实训方案名</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="practicalName" placeholder="请输入方案名" class="layui-input">
+                </div>
+                <label class="layui-form-label" >科目</label>
+                <div class="layui-input-inline">
+                    <select name="subjectType.subjectId" id="otype" lay-search>
+                        <option value="">请选择</option>
+                    </select>
+                </div>
+                <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="practical-query">
+                    <i class="layui-icon layui-icon-search"></i>
+                    查询
+                </button>
+                <button type="reset" class="pear-btn pear-btn-md">
+                    <i class="layui-icon layui-icon-refresh"></i>
+                    重置
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="layui-card">
+    <div class="layui-card-body">
+        <table id="practical-table" lay-filter="practical-table"></table>
+    </div>
+</div>
+</body>
+
+<script type="text/html" id="practical-toolbar">
+    <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="add">
+        <i class="layui-icon layui-icon-add-1"></i>
+        新增
+    </button>
+    <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove">
+        <i class="layui-icon layui-icon-delete"></i>
+        删除
+    </button>
+</script>
+
+<script type="text/html" id="practical-bar">
+    <button class="pear-btn pear-btn-primary pear-btn-sm" lay-event="edit"><i class="layui-icon layui-icon-edit"></i>
+    </button>
+    <button class="pear-btn pear-btn-danger pear-btn-sm" lay-event="remove"><i class="layui-icon layui-icon-delete"></i>
+    </button>
+</script>
+
+
+<script src="../../component/layui/layui.js"></script>
+
+<script>
+    layui.use(['table', 'form', 'jquery'], function () {
+        let table = layui.table;
+        let form = layui.form;
+        let $ = layui.jquery;
+
+        let cols = [
+            [
+                {type: 'checkbox'},
+                {title: '方案名', field: 'practicalName', align: 'center'},
+                {title: '封面', field: 'practicalCover', align: 'center'},
+                {title: '方案链接', field: 'practicalUrl', align: 'center'},
+                {title: '点击量', field: 'practicalClick', align: 'center', sort: true},
+                {title: '所属科目', field: 'subjectType', align: 'center', templet:'<p>{{ d.subjectType.subjectName}}</p>'},
+                {title: '操作', toolbar: '#practical-bar', align: 'center', width: 130}
+            ]
+        ];
+
+        table.render({
+            elem: '#practical-table',  //表格id
+            url: '/practical-service/api/practical/containSubject',  //异步请求参数
+            page: true,     //开启分页功能
+            cols: cols,     //设置表头。值是一个二维数组。方法渲染方式必填
+            skin: 'line',   //设定表格外观:line（行边框风格）,row（列边框风格）,nob（无边框风格）
+            //开启表格头部工具栏区域
+            toolbar: '#practical-toolbar',
+            response: {
+                statusCode: 200 //获取数据成功状态码
+            },
+            //自由配置头部工具栏右侧的图标按钮
+            defaultToolbar: [{
+                layEvent: 'refresh',
+                icon: 'layui-icon-refresh',
+            }, 'filter', 'print', 'exports']
+        });
+
+        table.on('tool(practical-table)', function (obj) {
+            if (obj.event === 'remove') {
+                window.remove(obj);
+            } else if (obj.event === 'edit') {
+                window.edit(obj);
+            }
+        });
+
+        //监听表头按钮
+        table.on('toolbar(practical-table)', function (obj) {
+            if (obj.event === 'add') {
+                window.add();
+            } else if (obj.event === 'refresh') {
+                window.refresh();
+            } else if (obj.event === 'batchRemove') {
+                window.batchRemove(obj);
+            }
+        });
+
+        form.on('submit(practical-query)', function (data) {
+            table.reload('practical-table', {where: data.field});
+            return false;
+        });
+
+        //新增弹层
+        window.add = function () {
+            layer.open({
+                type: 2,
+                title: '新增',
+                shade: 0.1,
+                area: ['50%', '90%'],
+                content: 'operate/addPractical.html',
+                success: function (layero, index) {
+                    form.render('select');
+                    var iframe = window['layui-layer-iframe' + index];
+                    setTimeout(function () {
+                        layer.tips('点击此处返回', '.layui-layer-setwin .layui-layer-close', {
+                            tips: 3
+                        });
+                    }, 500)
+                }
+            });
+        };
+
+        //修改弹层
+        window.edit = function (obj) {
+            layer.open({
+                type: 2,
+                title: '修改',
+                shade: 0.1,
+                area: ['50%', '90%'],
+                content: 'operate/editPractical.html',
+                success: function (layero, index) {
+                    var iframe = window['layui-layer-iframe' + index];
+                    iframe.child(obj.data);
+                    setTimeout(function () {
+                        layer.tips('点击此处返回', '.layui-layer-setwin .layui-layer-close', {
+                            tips: 3
+                        });
+                    }, 500)
+                }
+            });
+        };
+
+        //删除
+        window.remove = function (obj) {
+            layer.confirm('确定要删除该实训方案', {icon: 3, title: '提示'}, function (index) {
+                layer.close(index);
+                let loading = layer.load();
+                $.ajax({
+                    url: "/practical-service/api/practical/" + obj.data['practicalId'],
+                    dataType: 'json',
+                    type: 'delete',
+                    success: function (result) {
+                        layer.close(loading);
+                        if (result.success) {
+                            layer.msg(result.msg, {icon: 1, time: 1000}, function () {
+                                obj.del();
+                            });
+                        } else {
+                            layer.msg(result.msg, {icon: 2, time: 1000});
+                        }
+                    }
+                })
+            });
+        };
+
+        //批量删除
+        window.batchRemove = function (obj) {
+            let data = table.checkStatus(obj.config.id).data;
+            if (data.length === 0) {
+                layer.msg("未选中数据", {icon: 3, time: 1000});
+                return false;
+            }
+            let ids = "";
+            for (let i = 0; i < data.length; i++) {
+                ids += data[i].practicalId + ",";
+            }
+            console.log(ids);
+            ids = ids.substr(0, ids.length - 1);
+            layer.confirm('确定要删除这些方案', {icon: 3, title: '提示'}, function (index) {
+                layer.close(index);
+                let loading = layer.load();
+                $.ajax({
+                    url: "/practical-service/api/practical/" + ids,
+                    dataType: 'json',
+                    type: 'delete',
+                    success: function (result) {
+                        layer.close(loading);
+                        if (result.success) {
+                            layer.msg(result.msg, {icon: 1, time: 1000}, function () {
+                                table.reload('practical-table');
+                            });
+                        } else {
+                            layer.msg(result.msg, {icon: 2, time: 1000});
+                        }
+                    }
+                })
+            });
+        };
+
+        //右上刷新表格按钮
+        window.refresh = function (param) {
+            table.reload('practical-table');
+        };
+
+        //加载科目类型的下拉菜单
+        $.ajax({
+            url: '/course-service/api/subject?page=1&limit=999',
+            dataType: 'json',
+            type: 'get',
+            success: function (data) {
+                $.each(data.data, function (index, item) {
+                    $('#otype').append(new Option(item.subjectName, item.subjectId));// 下拉菜单里添加元素
+                });
+                layui.form.render("select");
+            }
+        });
+    });
+
+
+
+</script>
+
+</body>
+</html>
